@@ -60,6 +60,38 @@ def add_rating(movie_id: int, rating: int, review_note: str | None = None) -> No
         connection.commit()
 
 
+def add_movie(
+    title: str,
+    release_year: int,
+    genre_name: str,
+    director_name: str,
+    runtime_minutes: int,
+    average_rating: float | None = None,
+) -> int:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            EXEC dbo.usp_AddMovie
+                @Title = ?,
+                @ReleaseYear = ?,
+                @GenreName = ?,
+                @DirectorName = ?,
+                @RuntimeMinutes = ?,
+                @AverageRating = ?;
+            """,
+            title,
+            release_year,
+            genre_name,
+            director_name,
+            runtime_minutes,
+            average_rating,
+        )
+        row = cursor.fetchone()
+        connection.commit()
+        return int(row.MovieId)
+
+
 def list_watchlist() -> list[WatchlistItem]:
     with get_connection() as connection:
         cursor = connection.cursor()
@@ -77,4 +109,3 @@ def list_watchlist() -> list[WatchlistItem]:
         )
         for row in rows
     ]
-

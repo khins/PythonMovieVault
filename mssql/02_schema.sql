@@ -1,53 +1,59 @@
 USE MovieVault;
 GO
 
-IF OBJECT_ID('dbo.UserRatings', 'U') IS NOT NULL DROP TABLE dbo.UserRatings;
-IF OBJECT_ID('dbo.Watchlist', 'U') IS NOT NULL DROP TABLE dbo.Watchlist;
-IF OBJECT_ID('dbo.Movies', 'U') IS NOT NULL DROP TABLE dbo.Movies;
-IF OBJECT_ID('dbo.Genres', 'U') IS NOT NULL DROP TABLE dbo.Genres;
+IF OBJECT_ID('dbo.Genres', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Genres
+    (
+        GenreId INT IDENTITY(1,1) PRIMARY KEY,
+        GenreName NVARCHAR(100) NOT NULL UNIQUE
+    );
+END;
 GO
 
-CREATE TABLE dbo.Genres
-(
-    GenreId INT IDENTITY(1,1) PRIMARY KEY,
-    GenreName NVARCHAR(100) NOT NULL UNIQUE
-);
+IF OBJECT_ID('dbo.Movies', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Movies
+    (
+        MovieId INT IDENTITY(1,1) PRIMARY KEY,
+        Title NVARCHAR(200) NOT NULL,
+        ReleaseYear INT NOT NULL,
+        GenreId INT NOT NULL,
+        DirectorName NVARCHAR(150) NOT NULL,
+        RuntimeMinutes INT NOT NULL,
+        AverageRating DECIMAL(3,1) NULL,
+        CONSTRAINT FK_Movies_Genres FOREIGN KEY (GenreId) REFERENCES dbo.Genres(GenreId)
+    );
+END;
 GO
 
-CREATE TABLE dbo.Movies
-(
-    MovieId INT IDENTITY(1,1) PRIMARY KEY,
-    Title NVARCHAR(200) NOT NULL,
-    ReleaseYear INT NOT NULL,
-    GenreId INT NOT NULL,
-    DirectorName NVARCHAR(150) NOT NULL,
-    RuntimeMinutes INT NOT NULL,
-    AverageRating DECIMAL(3,1) NULL,
-    CONSTRAINT FK_Movies_Genres FOREIGN KEY (GenreId) REFERENCES dbo.Genres(GenreId)
-);
+IF OBJECT_ID('dbo.Watchlist', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Watchlist
+    (
+        WatchlistId INT IDENTITY(1,1) PRIMARY KEY,
+        MovieId INT NOT NULL,
+        AddedOn DATETIME2 NOT NULL CONSTRAINT DF_Watchlist_AddedOn DEFAULT SYSUTCDATETIME(),
+        IsWatched BIT NOT NULL CONSTRAINT DF_Watchlist_IsWatched DEFAULT 0,
+        CONSTRAINT FK_Watchlist_Movies FOREIGN KEY (MovieId) REFERENCES dbo.Movies(MovieId),
+        CONSTRAINT UQ_Watchlist_Movie UNIQUE (MovieId)
+    );
+END;
 GO
 
-CREATE TABLE dbo.Watchlist
-(
-    WatchlistId INT IDENTITY(1,1) PRIMARY KEY,
-    MovieId INT NOT NULL,
-    AddedOn DATETIME2 NOT NULL CONSTRAINT DF_Watchlist_AddedOn DEFAULT SYSUTCDATETIME(),
-    IsWatched BIT NOT NULL CONSTRAINT DF_Watchlist_IsWatched DEFAULT 0,
-    CONSTRAINT FK_Watchlist_Movies FOREIGN KEY (MovieId) REFERENCES dbo.Movies(MovieId),
-    CONSTRAINT UQ_Watchlist_Movie UNIQUE (MovieId)
-);
-GO
-
-CREATE TABLE dbo.UserRatings
-(
-    UserRatingId INT IDENTITY(1,1) PRIMARY KEY,
-    MovieId INT NOT NULL,
-    Rating TINYINT NOT NULL,
-    ReviewNote NVARCHAR(500) NULL,
-    RatedOn DATETIME2 NOT NULL CONSTRAINT DF_UserRatings_RatedOn DEFAULT SYSUTCDATETIME(),
-    CONSTRAINT FK_UserRatings_Movies FOREIGN KEY (MovieId) REFERENCES dbo.Movies(MovieId),
-    CONSTRAINT CK_UserRatings_Rating CHECK (Rating BETWEEN 1 AND 10)
-);
+IF OBJECT_ID('dbo.UserRatings', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.UserRatings
+    (
+        UserRatingId INT IDENTITY(1,1) PRIMARY KEY,
+        MovieId INT NOT NULL,
+        Rating TINYINT NOT NULL,
+        ReviewNote NVARCHAR(500) NULL,
+        RatedOn DATETIME2 NOT NULL CONSTRAINT DF_UserRatings_RatedOn DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT FK_UserRatings_Movies FOREIGN KEY (MovieId) REFERENCES dbo.Movies(MovieId),
+        CONSTRAINT CK_UserRatings_Rating CHECK (Rating BETWEEN 1 AND 10)
+    );
+END;
 GO
 
 CREATE OR ALTER VIEW dbo.vMovieDetails
@@ -100,6 +106,54 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.usp_AddMovie
+    @Title NVARCHAR(200),
+    @ReleaseYear INT,
+    @GenreName NVARCHAR(100),
+    @DirectorName NVARCHAR(150),
+    @RuntimeMinutes INT,
+    @AverageRating DECIMAL(3,1) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @GenreId INT;
+
+    SELECT @GenreId = GenreId
+    FROM dbo.Genres
+    WHERE GenreName = @GenreName;
+
+    IF @GenreId IS NULL
+    BEGIN
+        INSERT INTO dbo.Genres (GenreName)
+        VALUES (@GenreName);
+
+        SET @GenreId = SCOPE_IDENTITY();
+    END;
+
+    INSERT INTO dbo.Movies
+    (
+        Title,
+        ReleaseYear,
+        GenreId,
+        DirectorName,
+        RuntimeMinutes,
+        AverageRating
+    )
+    VALUES
+    (
+        @Title,
+        @ReleaseYear,
+        @GenreId,
+        @DirectorName,
+        @RuntimeMinutes,
+        @AverageRating
+    );
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS MovieId;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.usp_GetWatchlist
 AS
 BEGIN
@@ -118,4 +172,3 @@ BEGIN
     ORDER BY w.IsWatched, w.AddedOn;
 END;
 GO
-
