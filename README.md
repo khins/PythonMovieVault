@@ -75,6 +75,14 @@ If you use SQL authentication, change the connection string accordingly.
 
 ## Run The App
 
+Start the interactive menu:
+
+```powershell
+python -m src.movie_vault.cli menu
+```
+
+Or run single commands directly:
+
 ```powershell
 python -m src.movie_vault.cli list-movies
 python -m src.movie_vault.cli search --title inception

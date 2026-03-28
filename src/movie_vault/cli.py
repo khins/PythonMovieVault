@@ -13,6 +13,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    subparsers.add_parser("menu", help="Launch the interactive menu.")
     subparsers.add_parser("list-movies", help="Show all movies.")
 
     search_parser = subparsers.add_parser("search", help="Search movies by title or genre.")
@@ -120,11 +121,142 @@ def add_movie_to_watchlist(movie_id: int) -> None:
         print(f"Movie is already on the watchlist with entry ID {watchlist_id}.")
 
 
+def save_rating(movie_id: int, rating: int, note: str | None = None) -> None:
+    if movie_id <= 0:
+        raise ValueError("Movie ID must be greater than 0.")
+
+    if not 1 <= rating <= 10:
+        raise ValueError("Rating must be between 1 and 10.")
+
+    repository.add_rating(movie_id=movie_id, rating=rating, review_note=note)
+    print("Rating saved.")
+
+
+def prompt_text(prompt: str, *, optional: bool = False) -> str | None:
+    while True:
+        value = input(prompt).strip()
+        if value:
+            return value
+        if optional:
+            return None
+        print("A value is required.")
+
+
+def prompt_int(prompt: str, *, minimum: int | None = None, maximum: int | None = None) -> int:
+    while True:
+        raw_value = input(prompt).strip()
+        try:
+            value = int(raw_value)
+        except ValueError:
+            print("Please enter a whole number.")
+            continue
+
+        if minimum is not None and value < minimum:
+            print(f"Please enter a number greater than or equal to {minimum}.")
+            continue
+
+        if maximum is not None and value > maximum:
+            print(f"Please enter a number less than or equal to {maximum}.")
+            continue
+
+        return value
+
+
+def prompt_float(prompt: str, *, minimum: float | None = None, maximum: float | None = None) -> float | None:
+    while True:
+        raw_value = input(prompt).strip()
+        if not raw_value:
+            return None
+
+        try:
+            value = float(raw_value)
+        except ValueError:
+            print("Please enter a number like 7.5, or press Enter to skip.")
+            continue
+
+        if minimum is not None and value < minimum:
+            print(f"Please enter a number greater than or equal to {minimum}.")
+            continue
+
+        if maximum is not None and value > maximum:
+            print(f"Please enter a number less than or equal to {maximum}.")
+            continue
+
+        return value
+
+
+def show_menu() -> None:
+    print("\nMovie Vault")
+    print("1. List movies")
+    print("2. Search movies")
+    print("3. Add movie")
+    print("4. Add to watchlist")
+    print("5. View watchlist")
+    print("6. Rate a movie")
+    print("7. Exit")
+
+
+def run_menu() -> None:
+    current_year = datetime.now().year
+
+    while True:
+        show_menu()
+        choice = input("Choose an option: ").strip()
+
+        try:
+            if choice == "1":
+                print_movies()
+            elif choice == "2":
+                title = prompt_text("Title contains (press Enter to skip): ", optional=True)
+                genre = prompt_text("Genre name (press Enter to skip): ", optional=True)
+                print_search_results(title=title, genre=genre)
+            elif choice == "3":
+                title = prompt_text("Title: ")
+                year = prompt_int("Release year: ", minimum=1888, maximum=current_year)
+                genre = prompt_text("Genre: ")
+                director = prompt_text("Director: ")
+                runtime = prompt_int("Runtime in minutes: ", minimum=1)
+                average_rating = prompt_float(
+                    "Average rating 0-10 (press Enter to skip): ",
+                    minimum=0,
+                    maximum=10,
+                )
+                create_movie(
+                    argparse.Namespace(
+                        title=title,
+                        year=year,
+                        genre=genre,
+                        director=director,
+                        runtime=runtime,
+                        average_rating=average_rating,
+                    )
+                )
+            elif choice == "4":
+                movie_id = prompt_int("Movie ID to add to watchlist: ", minimum=1)
+                add_movie_to_watchlist(movie_id)
+            elif choice == "5":
+                print_watchlist()
+            elif choice == "6":
+                movie_id = prompt_int("Movie ID to rate: ", minimum=1)
+                rating = prompt_int("Your rating (1-10): ", minimum=1, maximum=10)
+                note = prompt_text("Optional note (press Enter to skip): ", optional=True)
+                save_rating(movie_id=movie_id, rating=rating, note=note)
+            elif choice == "7":
+                print("Goodbye.")
+                break
+            else:
+                print("Please choose a number from 1 to 7.")
+        except Exception as error:
+            print(f"Error: {error}")
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "list-movies":
+    if args.command == "menu":
+        run_menu()
+    elif args.command == "list-movies":
         print_movies()
     elif args.command == "search":
         print_search_results(title=args.title, genre=args.genre)
@@ -133,10 +265,7 @@ def main() -> None:
     elif args.command == "add-to-watchlist":
         add_movie_to_watchlist(args.movie_id)
     elif args.command == "rate":
-        if not 1 <= args.rating <= 10:
-            raise ValueError("Rating must be between 1 and 10.")
-        repository.add_rating(movie_id=args.movie_id, rating=args.rating, review_note=args.note)
-        print("Rating saved.")
+        save_rating(movie_id=args.movie_id, rating=args.rating, note=args.note)
     elif args.command == "list-watchlist":
         print_watchlist()
 
