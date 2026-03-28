@@ -27,6 +27,9 @@ def build_parser() -> argparse.ArgumentParser:
     add_movie_parser.add_argument("--runtime", type=int, required=True, help="Runtime in minutes.")
     add_movie_parser.add_argument("--average-rating", type=float, help="Optional average rating.")
 
+    watchlist_parser = subparsers.add_parser("add-to-watchlist", help="Add a movie to the watchlist.")
+    watchlist_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
+
     rate_parser = subparsers.add_parser("rate", help="Add your personal rating for a movie.")
     rate_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
     rate_parser.add_argument("--rating", type=int, required=True, help="Rating from 1 to 10.")
@@ -106,6 +109,17 @@ def create_movie(args: argparse.Namespace) -> None:
     print(f"Movie added with ID {movie_id}.")
 
 
+def add_movie_to_watchlist(movie_id: int) -> None:
+    if movie_id <= 0:
+        raise ValueError("Movie ID must be greater than 0.")
+
+    watchlist_id, was_inserted = repository.add_to_watchlist(movie_id)
+    if was_inserted:
+        print(f"Movie added to watchlist with entry ID {watchlist_id}.")
+    else:
+        print(f"Movie is already on the watchlist with entry ID {watchlist_id}.")
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -116,6 +130,8 @@ def main() -> None:
         print_search_results(title=args.title, genre=args.genre)
     elif args.command == "add-movie":
         create_movie(args)
+    elif args.command == "add-to-watchlist":
+        add_movie_to_watchlist(args.movie_id)
     elif args.command == "rate":
         if not 1 <= args.rating <= 10:
             raise ValueError("Rating must be between 1 and 10.")

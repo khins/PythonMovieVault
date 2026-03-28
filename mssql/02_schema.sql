@@ -154,6 +154,46 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.usp_AddToWatchlist
+    @MovieId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM dbo.Movies
+        WHERE MovieId = @MovieId
+    )
+    BEGIN
+        THROW 50001, 'Movie not found.', 1;
+    END;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM dbo.Watchlist
+        WHERE MovieId = @MovieId
+    )
+    BEGIN
+        SELECT
+            WatchlistId,
+            CAST(0 AS BIT) AS WasInserted
+        FROM dbo.Watchlist
+        WHERE MovieId = @MovieId;
+        RETURN;
+    END;
+
+    INSERT INTO dbo.Watchlist (MovieId)
+    VALUES (@MovieId);
+
+    SELECT
+        CAST(SCOPE_IDENTITY() AS INT) AS WatchlistId,
+        CAST(1 AS BIT) AS WasInserted;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.usp_GetWatchlist
 AS
 BEGIN

@@ -80,6 +80,7 @@ python -m src.movie_vault.cli list-movies
 python -m src.movie_vault.cli search --title inception
 python -m src.movie_vault.cli list-watchlist
 python -m src.movie_vault.cli add-movie --title "Arrival" --year 2016 --genre "Sci-Fi" --director "Denis Villeneuve" --runtime 116 --average-rating 7.9
+python -m src.movie_vault.cli add-to-watchlist --movie-id 9
 python -m src.movie_vault.cli rate --movie-id 1 --rating 9
 ```
 

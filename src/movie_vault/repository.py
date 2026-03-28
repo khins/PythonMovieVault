@@ -92,6 +92,15 @@ def add_movie(
         return int(row.MovieId)
 
 
+def add_to_watchlist(movie_id: int) -> tuple[int, bool]:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("EXEC dbo.usp_AddToWatchlist @MovieId = ?;", movie_id)
+        row = cursor.fetchone()
+        connection.commit()
+        return int(row.WatchlistId), bool(row.WasInserted)
+
+
 def list_watchlist() -> list[WatchlistItem]:
     with get_connection() as connection:
         cursor = connection.cursor()
