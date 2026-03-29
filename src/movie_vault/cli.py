@@ -46,6 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
     rate_parser.add_argument("--note", help="Optional short review note.")
 
     subparsers.add_parser("list-watchlist", help="Show watchlist entries.")
+    subparsers.add_parser("list-watched", help="Show watched movies from the watchlist.")
     return parser
 
 
@@ -149,6 +150,7 @@ def mark_movie_as_watched(movie_id: int) -> None:
         print(f"Watchlist entry {watchlist_id} marked as watched.")
     else:
         print(f"Watchlist entry {watchlist_id} was already marked as watched.")
+
 
 def remove_from_watchlist(movie_id: int) -> None:
     if movie_id <= 0:
@@ -321,10 +323,10 @@ def main() -> None:
         save_rating(movie_id=args.movie_id, rating=args.rating, note=args.note)
     elif args.command == "list-watchlist":
         print_watchlist()
+    elif args.command == "list-watched":
+        print_watched_watchlist()
     elif args.command == "remove-from-watchlist":
         remove_from_watchlist(args.movie_id)
-
-
 
 if __name__ == "__main__":
     main()
