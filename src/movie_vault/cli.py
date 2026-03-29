@@ -31,6 +31,9 @@ def build_parser() -> argparse.ArgumentParser:
     watchlist_parser = subparsers.add_parser("add-to-watchlist", help="Add a movie to the watchlist.")
     watchlist_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
 
+    mark_watched_parser = subparsers.add_parser("mark-watched", help="Mark a watchlist movie as watched.")
+    mark_watched_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
+
     rate_parser = subparsers.add_parser("rate", help="Add your personal rating for a movie.")
     rate_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
     rate_parser.add_argument("--rating", type=int, required=True, help="Rating from 1 to 10.")
@@ -121,6 +124,17 @@ def add_movie_to_watchlist(movie_id: int) -> None:
         print(f"Movie is already on the watchlist with entry ID {watchlist_id}.")
 
 
+def mark_movie_as_watched(movie_id: int) -> None:
+    if movie_id <= 0:
+        raise ValueError("Movie ID must be greater than 0.")
+
+    watchlist_id, was_updated = repository.mark_watchlist_as_watched(movie_id)
+    if was_updated:
+        print(f"Watchlist entry {watchlist_id} marked as watched.")
+    else:
+        print(f"Watchlist entry {watchlist_id} was already marked as watched.")
+
+
 def save_rating(movie_id: int, rating: int, note: str | None = None) -> None:
     if movie_id <= 0:
         raise ValueError("Movie ID must be greater than 0.")
@@ -192,8 +206,9 @@ def show_menu() -> None:
     print("3. Add movie")
     print("4. Add to watchlist")
     print("5. View watchlist")
-    print("6. Rate a movie")
-    print("7. Exit")
+    print("6. Mark watchlist as watched")
+    print("7. Rate a movie")
+    print("8. Exit")
 
 
 def run_menu() -> None:
@@ -237,15 +252,18 @@ def run_menu() -> None:
             elif choice == "5":
                 print_watchlist()
             elif choice == "6":
+                movie_id = prompt_int("Movie ID to mark as watched: ", minimum=1)
+                mark_movie_as_watched(movie_id)
+            elif choice == "7":
                 movie_id = prompt_int("Movie ID to rate: ", minimum=1)
                 rating = prompt_int("Your rating (1-10): ", minimum=1, maximum=10)
                 note = prompt_text("Optional note (press Enter to skip): ", optional=True)
                 save_rating(movie_id=movie_id, rating=rating, note=note)
-            elif choice == "7":
+            elif choice == "8":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 7.")
+                print("Please choose a number from 1 to 8.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -264,6 +282,8 @@ def main() -> None:
         create_movie(args)
     elif args.command == "add-to-watchlist":
         add_movie_to_watchlist(args.movie_id)
+    elif args.command == "mark-watched":
+        mark_movie_as_watched(args.movie_id)
     elif args.command == "rate":
         save_rating(movie_id=args.movie_id, rating=args.rating, note=args.note)
     elif args.command == "list-watchlist":

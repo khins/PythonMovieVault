@@ -194,6 +194,42 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.usp_MarkWatchlistAsWatched
+    @MovieId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @WasUpdated BIT = 0;
+
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM dbo.Watchlist
+        WHERE MovieId = @MovieId
+    )
+    BEGIN
+        THROW 50002, 'Movie is not on the watchlist.', 1;
+    END;
+
+    UPDATE dbo.Watchlist
+    SET IsWatched = 1
+    WHERE MovieId = @MovieId
+      AND IsWatched = 0;
+
+    IF @@ROWCOUNT > 0
+    BEGIN
+        SET @WasUpdated = 1;
+    END;
+
+    SELECT
+        WatchlistId,
+        IsWatched,
+        @WasUpdated AS WasUpdated
+    FROM dbo.Watchlist
+    WHERE MovieId = @MovieId;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.usp_GetWatchlist
 AS
 BEGIN

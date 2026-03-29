@@ -101,6 +101,15 @@ def add_to_watchlist(movie_id: int) -> tuple[int, bool]:
         return int(row.WatchlistId), bool(row.WasInserted)
 
 
+def mark_watchlist_as_watched(movie_id: int) -> tuple[int, bool]:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("EXEC dbo.usp_MarkWatchlistAsWatched @MovieId = ?;", movie_id)
+        row = cursor.fetchone()
+        connection.commit()
+        return int(row.WatchlistId), bool(row.WasUpdated)
+
+
 def list_watchlist() -> list[WatchlistItem]:
     with get_connection() as connection:
         cursor = connection.cursor()
