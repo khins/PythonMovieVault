@@ -230,6 +230,25 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.usp_RemoveFromWatchlist
+    @MovieId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @WasDeleted BIT = 0;
+
+    DELETE FROM dbo.Watchlist
+    WHERE MovieId = @MovieId;
+
+    IF @@ROWCOUNT > 0
+    BEGIN
+        SET @WasDeleted = 1;
+    END;
+
+    SELECT @WasDeleted AS WasDeleted;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.usp_GetWatchlist
 AS
 BEGIN

@@ -134,6 +134,16 @@ def mark_movie_as_watched(movie_id: int) -> None:
     else:
         print(f"Watchlist entry {watchlist_id} was already marked as watched.")
 
+def remove_from_watchlist(movie_id: int) -> None:
+    if movie_id <= 0:
+        raise ValueError("Movie ID must be greater than 0.")
+
+    was_deleted = repository.remove_from_watchlist(movie_id)
+    if was_deleted:
+        print(f"Movie ID {movie_id} removed from watchlist.")
+    else:
+        print(f"Movie ID {movie_id} was not found on the watchlist.")
+
 
 def save_rating(movie_id: int, rating: int, note: str | None = None) -> None:
     if movie_id <= 0:
@@ -208,7 +218,8 @@ def show_menu() -> None:
     print("5. View watchlist")
     print("6. Mark watchlist as watched")
     print("7. Rate a movie")
-    print("8. Exit")
+    print("8. Remove from watchlist")
+    print("9. Exit")
 
 
 def run_menu() -> None:
@@ -260,6 +271,9 @@ def run_menu() -> None:
                 note = prompt_text("Optional note (press Enter to skip): ", optional=True)
                 save_rating(movie_id=movie_id, rating=rating, note=note)
             elif choice == "8":
+                movie_id = prompt_int("Movie ID to remove from watchlist: ", minimum=1)
+                remove_from_watchlist(movie_id)
+            elif choice == "9":
                 print("Goodbye.")
                 break
             else:
