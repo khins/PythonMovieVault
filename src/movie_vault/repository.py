@@ -41,10 +41,15 @@ def list_movies() -> list[Movie]:
         return _rows_to_movies(cursor.fetchall())
 
 
-def search_movies(title: str | None = None, genre: str | None = None) -> list[Movie]:
+def search_movies(title: str | None = None, genre: str | None = None, director: str | None = None) -> list[Movie]:
     with get_connection() as connection:
         cursor = connection.cursor()
-        cursor.execute("EXEC dbo.usp_SearchMovies @Title = ?, @GenreName = ?;", title, genre)
+        cursor.execute(
+            "EXEC dbo.usp_SearchMovies @Title = ?, @GenreName = ?, @DirectorName = ?;",
+            title,
+            genre,
+            director,
+        )
         return _rows_to_movies(cursor.fetchall())
 
 

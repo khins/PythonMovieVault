@@ -19,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     search_parser = subparsers.add_parser("search", help="Search movies by title or genre.")
     search_parser.add_argument("--title", help="Part of a movie title.")
     search_parser.add_argument("--genre", help="Exact genre name.")
+    search_parser.add_argument("--director", help="Part of a director name.")
 
     add_movie_parser = subparsers.add_parser("add-movie", help="Add a movie to the database.")
     add_movie_parser.add_argument("--title", required=True, help="Movie title.")
@@ -64,8 +65,12 @@ def print_movies() -> None:
         )
 
 
-def print_search_results(title: str | None, genre: str | None) -> None:
-    movies = repository.search_movies(title=title, genre=genre)
+def print_search_results(
+    title: str | None = None,
+    genre: str | None = None,
+    director: str | None = None,
+) -> None:
+    movies = repository.search_movies(title=title, genre=genre, director=director)
     if not movies:
         print("No matching movies found.")
         return
@@ -237,8 +242,9 @@ def show_menu() -> None:
     print("6. Mark watchlist as watched")
     print("7. Rate a movie")
     print("8. Remove from watchlist")
-    print("9. show watched movies only")
-    print("10. Exit")
+    print("9. Show watched movies only")
+    print("10. Search by director")
+    print("11. Exit")
 
 
 def run_menu() -> None:
@@ -254,7 +260,8 @@ def run_menu() -> None:
             elif choice == "2":
                 title = prompt_text("Title contains (press Enter to skip): ", optional=True)
                 genre = prompt_text("Genre name (press Enter to skip): ", optional=True)
-                print_search_results(title=title, genre=genre)
+                director = prompt_text("Director name (press Enter to skip): ", optional=True)
+                print_search_results(title=title, genre=genre, director=director)
             elif choice == "3":
                 title = prompt_text("Title: ")
                 year = prompt_int("Release year: ", minimum=1888, maximum=current_year)
@@ -295,10 +302,13 @@ def run_menu() -> None:
             elif choice == "9":
                 print_watched_watchlist()
             elif choice == "10":
+                director = prompt_text("Director name to search for: ")
+                print_search_results(title=None, genre=None, director=director)
+            elif choice == "11":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 10.")
+                print("Please choose a number from 1 to 11.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -312,7 +322,7 @@ def main() -> None:
     elif args.command == "list-movies":
         print_movies()
     elif args.command == "search":
-        print_search_results(title=args.title, genre=args.genre)
+        print_search_results(title=args.title, genre=args.genre, director=args.director)
     elif args.command == "add-movie":
         create_movie(args)
     elif args.command == "add-to-watchlist":

@@ -73,7 +73,8 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_SearchMovies
     @Title NVARCHAR(200) = NULL,
-    @GenreName NVARCHAR(100) = NULL
+    @GenreName NVARCHAR(100) = NULL,
+    @DirectorName NVARCHAR(150) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -89,6 +90,7 @@ BEGIN
     FROM dbo.vMovieDetails
     WHERE (@Title IS NULL OR Title LIKE '%' + @Title + '%')
       AND (@GenreName IS NULL OR GenreName = @GenreName)
+      AND (@DirectorName IS NULL OR DirectorName LIKE '%' + @DirectorName + '%')
     ORDER BY Title;
 END;
 GO
