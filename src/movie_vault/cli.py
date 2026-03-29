@@ -31,6 +31,12 @@ def build_parser() -> argparse.ArgumentParser:
     watchlist_parser = subparsers.add_parser("add-to-watchlist", help="Add a movie to the watchlist.")
     watchlist_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
 
+    remove_watchlist_parser = subparsers.add_parser(
+        "remove-from-watchlist",
+        help="Remove a movie from the watchlist."
+    )
+    remove_watchlist_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
+
     mark_watched_parser = subparsers.add_parser("mark-watched", help="Mark a watchlist movie as watched.")
     mark_watched_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
 
@@ -277,7 +283,7 @@ def run_menu() -> None:
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 8.")
+                print("Please choose a number from 1 to 9.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -302,6 +308,9 @@ def main() -> None:
         save_rating(movie_id=args.movie_id, rating=args.rating, note=args.note)
     elif args.command == "list-watchlist":
         print_watchlist()
+    elif args.command == "remove-from-watchlist":
+        remove_from_watchlist(args.movie_id)
+
 
 
 if __name__ == "__main__":
