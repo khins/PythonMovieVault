@@ -84,6 +84,16 @@ def print_watchlist() -> None:
         print(f"[{item.movie_id}] {item.title} ({item.release_year}) - {status}")
 
 
+def print_watched_watchlist() -> None:
+    items = repository.list_watchlist(watched_only=True)
+    if not items:
+        print("No watched movies found on the watchlist.")
+        return
+
+    for item in items:
+        print(f"[{item.movie_id}] {item.title} ({item.release_year}) - Watched")
+
+
 def create_movie(args: argparse.Namespace) -> None:
     title = args.title.strip()
     genre = args.genre.strip()
@@ -225,7 +235,8 @@ def show_menu() -> None:
     print("6. Mark watchlist as watched")
     print("7. Rate a movie")
     print("8. Remove from watchlist")
-    print("9. Exit")
+    print("9. show watched movies only")
+    print("10. Exit")
 
 
 def run_menu() -> None:
@@ -280,10 +291,12 @@ def run_menu() -> None:
                 movie_id = prompt_int("Movie ID to remove from watchlist: ", minimum=1)
                 remove_from_watchlist(movie_id)
             elif choice == "9":
+                print_watched_watchlist()
+            elif choice == "10":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 9.")
+                print("Please choose a number from 1 to 10.")
         except Exception as error:
             print(f"Error: {error}")
 

@@ -119,10 +119,10 @@ def mark_watchlist_as_watched(movie_id: int) -> tuple[int, bool]:
         return int(row.WatchlistId), bool(row.WasUpdated)
 
 
-def list_watchlist() -> list[WatchlistItem]:
+def list_watchlist(*, watched_only: bool = False) -> list[WatchlistItem]:
     with get_connection() as connection:
         cursor = connection.cursor()
-        cursor.execute("EXEC dbo.usp_GetWatchlist;")
+        cursor.execute("EXEC dbo.usp_GetWatchlist @WatchedOnly = ?;", watched_only)
         rows = cursor.fetchall()
 
     return [

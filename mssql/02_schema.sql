@@ -250,6 +250,7 @@ END;
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_GetWatchlist
+    @WatchedOnly BIT = 0
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -264,6 +265,7 @@ BEGIN
     FROM dbo.Watchlist AS w
     INNER JOIN dbo.Movies AS m
         ON w.MovieId = m.MovieId
+    WHERE (@WatchedOnly = 0 OR w.IsWatched = 1)
     ORDER BY w.IsWatched, w.AddedOn;
 END;
 GO
