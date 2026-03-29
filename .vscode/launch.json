@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Movie Vault Menu",
+      "type": "python",
+      "request": "launch",
+      "module": "src.movie_vault.cli",
+      "args": ["menu"],
+      "cwd": "C:\\Users\\Kevin\\OneDrive\\sql\\sql-server",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Movie Vault List Movies",
+      "type": "python",
+      "request": "launch",
+      "module": "src.movie_vault.cli",
+      "args": ["list-movies"],
+      "cwd": "C:\\Users\\Kevin\\OneDrive\\sql\\sql-server",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Movie Vault Menu For Add Movie Debugging",
+      "type": "python",
+      "request": "launch",
+      "module": "src.movie_vault.cli",
+      "args": ["menu"],
+      "cwd": "C:\\Users\\Kevin\\OneDrive\\sql\\sql-server",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Movie Vault Add To Watchlist",
+      "type": "python",
+      "request": "launch",
+      "module": "src.movie_vault.cli",
+      "args": ["add-to-watchlist", "--movie-id", "9"],
+      "cwd": "C:\\Users\\Kevin\\OneDrive\\sql\\sql-server",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
