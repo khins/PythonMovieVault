@@ -82,7 +82,7 @@ def add_movie(
     director_name: str,
     runtime_minutes: int,
     average_rating: float | None = None,
-) -> int:
+) -> tuple[int, bool]:
     with get_connection() as connection:
         cursor = connection.cursor()
         cursor.execute(
@@ -104,7 +104,7 @@ def add_movie(
         )
         row = cursor.fetchone()
         connection.commit()
-        return int(row.MovieId)
+        return int(row.MovieId), bool(row.WasInserted)
 
 
 def add_to_watchlist(movie_id: int) -> tuple[int, bool]:

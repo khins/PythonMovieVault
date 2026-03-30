@@ -150,7 +150,7 @@ def create_movie(args: argparse.Namespace) -> None:
     if args.average_rating is not None and not 0 <= args.average_rating <= 10:
         raise ValueError("Average rating must be between 0 and 10.")
 
-    movie_id = repository.add_movie(
+    movie_id, was_inserted = repository.add_movie(
         title=title,
         release_year=args.year,
         genre_name=genre,
@@ -158,7 +158,10 @@ def create_movie(args: argparse.Namespace) -> None:
         runtime_minutes=args.runtime,
         average_rating=args.average_rating,
     )
-    print(f"Movie added with ID {movie_id}.")
+    if was_inserted:
+        print(f"Movie added with ID {movie_id}.")
+    else:
+        print(f"Movie already exists with ID {movie_id}.")
 
 
 def add_movie_to_watchlist(movie_id: int) -> None:

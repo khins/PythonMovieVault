@@ -150,6 +150,23 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    IF EXISTS
+    (
+        SELECT 1
+        FROM dbo.Movies
+        WHERE Title = @Title
+          AND ReleaseYear = @ReleaseYear
+    )
+    BEGIN
+        SELECT
+            MovieId,
+            CAST(0 AS BIT) AS WasInserted
+        FROM dbo.Movies
+        WHERE Title = @Title
+          AND ReleaseYear = @ReleaseYear;
+        RETURN;
+    END;
+
     DECLARE @GenreId INT;
 
     SELECT @GenreId = GenreId
@@ -183,7 +200,9 @@ BEGIN
         @AverageRating
     );
 
-    SELECT CAST(SCOPE_IDENTITY() AS INT) AS MovieId;
+    SELECT
+        CAST(SCOPE_IDENTITY() AS INT) AS MovieId,
+        CAST(1 AS BIT) AS WasInserted;
 END;
 GO
 
