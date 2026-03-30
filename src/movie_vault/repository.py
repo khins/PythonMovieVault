@@ -51,7 +51,17 @@ def search_movies(title: str | None = None, genre: str | None = None, director: 
             director,
         )
         return _rows_to_movies(cursor.fetchall())
-
+    
+def get_top_rated_movies(limit: int = 10, genre: str | None = None, director: str | None = None) -> list[Movie]:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            "EXEC dbo.usp_GetTopRatedMovies @Limit = ?, @GenreName = ?, @DirectorName = ?;",
+            limit,
+            genre,
+            director,
+        )
+        return _rows_to_movies(cursor.fetchall())
 
 def add_rating(movie_id: int, rating: int, review_note: str | None = None) -> None:
     with get_connection() as connection:

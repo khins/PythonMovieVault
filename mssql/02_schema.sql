@@ -95,6 +95,37 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.usp_GetTopRatedMovies
+    @Limit INT = 10,
+    @GenreName NVARCHAR(100) = NULL,
+    @DirectorName NVARCHAR(150) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Limit <= 0
+    BEGIN
+        THROW 50003, 'Limit must be greater than 0.', 1;
+    END;
+
+    SELECT TOP (@Limit)
+        m.MovieId,
+        m.Title,
+        m.ReleaseYear,
+        g.GenreName,
+        m.DirectorName,
+        m.RuntimeMinutes,
+        m.AverageRating
+    FROM dbo.Movies AS m
+    INNER JOIN dbo.Genres AS g
+        ON m.GenreId = g.GenreId
+    WHERE (@GenreName IS NULL OR g.GenreName = @GenreName)
+      AND (@DirectorName IS NULL OR m.DirectorName LIKE '%' + @DirectorName + '%')
+      AND m.AverageRating IS NOT NULL
+    ORDER BY m.AverageRating DESC, m.Title ASC;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.usp_AddUserRating
     @MovieId INT,
     @Rating TINYINT,

@@ -21,6 +21,11 @@ def build_parser() -> argparse.ArgumentParser:
     search_parser.add_argument("--genre", help="Exact genre name.")
     search_parser.add_argument("--director", help="Part of a director name.")
 
+    top_rated_parser = subparsers.add_parser("top-rated", help="Show top-rated movies.")
+    top_rated_parser.add_argument("--limit", type=int, default=10, help="Maximum number of movies to show.")
+    top_rated_parser.add_argument("--genre", help="Optional genre filter.")
+    top_rated_parser.add_argument("--director", help="Optional director filter.")
+
     add_movie_parser = subparsers.add_parser("add-movie", help="Add a movie to the database.")
     add_movie_parser.add_argument("--title", required=True, help="Movie title.")
     add_movie_parser.add_argument("--year", type=int, required=True, help="Release year.")
@@ -88,6 +93,27 @@ def print_watchlist() -> None:
     for item in items:
         status = "Watched" if item.is_watched else "To Watch"
         print(f"[{item.movie_id}] {item.title} ({item.release_year}) - {status}")
+
+def print_top_rated_movies(
+    limit: int = 10,
+    genre: str | None = None,
+    director: str | None = None,
+) -> None:
+    if limit <= 0:
+        raise ValueError("Limit must be greater than 0.")
+
+    movies = repository.get_top_rated_movies(limit=limit, genre=genre, director=director)
+    if not movies:
+        print("No top rated movies found.")
+        return
+
+    print("Top Rated Movies:")
+    for movie in movies:
+        print(
+            f"[{movie.movie_id}] {movie.title} ({movie.release_year}) | "
+            f"{movie.genre_name} | {movie.director_name} | "
+            f"{movie.runtime_minutes} min | Avg: {movie.average_rating}"
+        )
 
 
 def print_watched_watchlist() -> None:
@@ -244,7 +270,8 @@ def show_menu() -> None:
     print("8. Remove from watchlist")
     print("9. Show watched movies only")
     print("10. Search by director")
-    print("11. Exit")
+    print("11. Top Rated Movies")
+    print("12. Exit")
 
 
 def run_menu() -> None:
@@ -305,10 +332,15 @@ def run_menu() -> None:
                 director = prompt_text("Director name to search for: ")
                 print_search_results(title=None, genre=None, director=director)
             elif choice == "11":
+                limit = prompt_int("How many top rated movies should be shown? ", minimum=1)
+                genre = prompt_text("Genre filter (press Enter to skip): ", optional=True)
+                director = prompt_text("Director filter (press Enter to skip): ", optional=True)
+                print_top_rated_movies(limit=limit, genre=genre, director=director)
+            elif choice == "12":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 11.")
+                print("Please choose a number from 1 to 12.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -337,6 +369,8 @@ def main() -> None:
         print_watched_watchlist()
     elif args.command == "remove-from-watchlist":
         remove_from_watchlist(args.movie_id)
+    elif args.command == "top-rated":
+        print_top_rated_movies(limit=args.limit, genre=args.genre, director=args.director)
 
 if __name__ == "__main__":
     main()
