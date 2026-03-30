@@ -34,6 +34,10 @@ def build_parser() -> argparse.ArgumentParser:
     add_movie_parser.add_argument("--runtime", type=int, required=True, help="Runtime in minutes.")
     add_movie_parser.add_argument("--average-rating", type=float, help="Optional average rating.")
 
+    update_movie_rating_parser = subparsers.add_parser("update-rating", help="Update your latest rating for a movie.")
+    update_movie_rating_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
+    update_movie_rating_parser.add_argument("--rating", type=int, required=True, help="New rating (1-10).")
+
     watchlist_parser = subparsers.add_parser("add-to-watchlist", help="Add a movie to the watchlist.")
     watchlist_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
 
@@ -207,6 +211,16 @@ def save_rating(movie_id: int, rating: int, note: str | None = None) -> None:
     repository.add_rating(movie_id=movie_id, rating=rating, review_note=note)
     print("Rating saved.")
 
+def update_movie_rating(movie_id: int, rating: int) -> None:
+    if movie_id <= 0:
+        raise ValueError("Movie ID must be greater than 0.")
+
+    if not 1 <= rating <= 10:
+        raise ValueError("Rating must be between 1 and 10.")
+
+    repository.update_rating(movie_id=movie_id, rating=rating)
+    print("Rating updated.")
+
 
 def prompt_text(prompt: str, *, optional: bool = False) -> str | None:
     while True:
@@ -270,11 +284,12 @@ def show_menu() -> None:
     print("5. View watchlist")
     print("6. Mark watchlist as watched")
     print("7. Rate a movie")
-    print("8. Remove from watchlist")
-    print("9. Show watched movies only")
-    print("10. Search by director")
-    print("11. Top Rated Movies")
-    print("12. Exit")
+    print("8. Update a movie rating")
+    print("9. Remove from watchlist")
+    print("10. Show watched movies only")
+    print("11. Search by director")
+    print("12. Top Rated Movies")
+    print("13. Exit")
 
 
 def run_menu() -> None:
@@ -327,23 +342,27 @@ def run_menu() -> None:
                 note = prompt_text("Optional note (press Enter to skip): ", optional=True)
                 save_rating(movie_id=movie_id, rating=rating, note=note)
             elif choice == "8":
+                movie_id = prompt_int("Movie ID to update rating for: ", minimum=1)
+                rating = prompt_int("Your new rating (1-10): ", minimum=1, maximum=10)
+                update_movie_rating(movie_id=movie_id, rating=rating)
+            elif choice == "9":
                 movie_id = prompt_int("Movie ID to remove from watchlist: ", minimum=1)
                 remove_from_watchlist(movie_id)
-            elif choice == "9":
-                print_watched_watchlist()
             elif choice == "10":
+                print_watched_watchlist()
+            elif choice == "11":
                 director = prompt_text("Director name to search for: ")
                 print_search_results(title=None, genre=None, director=director)
-            elif choice == "11":
+            elif choice == "12":
                 limit = prompt_int("How many top rated movies should be shown? ", minimum=1)
                 genre = prompt_text("Genre filter (press Enter to skip): ", optional=True)
                 director = prompt_text("Director filter (press Enter to skip): ", optional=True)
                 print_top_rated_movies(limit=limit, genre=genre, director=director)
-            elif choice == "12":
+            elif choice == "13":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 12.")
+                print("Please choose a number from 1 to 13.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -374,6 +393,7 @@ def main() -> None:
         remove_from_watchlist(args.movie_id)
     elif args.command == "top-rated":
         print_top_rated_movies(limit=args.limit, genre=args.genre, director=args.director)
-
+    elif args.command == "update-rating":
+        update_movie_rating(movie_id=args.movie_id, rating=args.rating)
 if __name__ == "__main__":
     main()

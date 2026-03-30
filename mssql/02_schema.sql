@@ -321,3 +321,43 @@ BEGIN
     ORDER BY w.IsWatched, w.AddedOn;
 END;
 GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_UpdateUserRating
+    @MovieId INT,
+    @Rating TINYINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM dbo.UserRatings
+        WHERE MovieId = @MovieId
+    )
+    BEGIN
+        THROW 50004, 'No user rating exists for this movie yet.', 1;
+    END;
+
+    ;WITH LatestRating AS
+    (
+        SELECT TOP (1)
+            UserRatingId
+        FROM dbo.UserRatings
+        WHERE MovieId = @MovieId
+        ORDER BY RatedOn DESC, UserRatingId DESC
+    )
+    UPDATE ur
+    SET Rating = @Rating
+    FROM dbo.UserRatings AS ur
+    INNER JOIN LatestRating AS lr
+        ON ur.UserRatingId = lr.UserRatingId;
+
+    SELECT TOP (1)
+        UserRatingId,
+        Rating
+    FROM dbo.UserRatings
+    WHERE MovieId = @MovieId
+    ORDER BY RatedOn DESC, UserRatingId DESC;
+END;
+GO

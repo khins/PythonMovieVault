@@ -74,6 +74,16 @@ def add_rating(movie_id: int, rating: int, review_note: str | None = None) -> No
         )
         connection.commit()
 
+def update_rating(movie_id: int, rating: int) -> None:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            "EXEC dbo.usp_UpdateUserRating @MovieId = ?, @Rating = ?",
+            movie_id,
+            rating,
+        )
+        cursor.fetchone()
+        connection.commit()
 
 def add_movie(
     title: str,
