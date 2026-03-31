@@ -180,3 +180,21 @@ def get_movie_by_id(movie_id: int) -> Movie | None:
         runtime_minutes=row.RuntimeMinutes,
         average_rating=float(row.AverageRating) if row.AverageRating is not None else None,
     )
+
+def get_recent_watchlist_entries(limit: int = 5) -> list[WatchlistItem]:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("EXEC dbo.usp_GetRecentWatchlist @Limit = ?;", limit)
+        rows = cursor.fetchall()
+
+    return [
+        WatchlistItem(
+            watchlist_id=row.WatchlistId,
+            movie_id=row.MovieId,
+            title=row.Title,
+            release_year=row.ReleaseYear,
+            added_on=row.AddedOn,
+            is_watched=bool(row.IsWatched),
+        )
+        for row in rows
+    ]

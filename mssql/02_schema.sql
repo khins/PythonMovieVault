@@ -382,3 +382,29 @@ BEGIN
     WHERE m.MovieId = @MovieId;
 END;
 GO
+
+
+CREATE OR ALTER PROCEDURE dbo.usp_GetRecentWatchlist
+    @Limit INT = 5
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Limit <= 0
+    BEGIN
+        THROW 50005, 'Limit must be greater than 0.', 1;
+    END;
+
+    SELECT TOP (@Limit)
+        w.WatchlistId,
+        m.MovieId,
+        m.Title,
+        m.ReleaseYear,
+        w.AddedOn,
+        w.IsWatched
+    FROM dbo.Watchlist AS w
+    INNER JOIN dbo.Movies AS m
+        ON w.MovieId = m.MovieId
+    ORDER BY w.AddedOn DESC;
+END;
+GO

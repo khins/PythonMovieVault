@@ -58,6 +58,9 @@ def build_parser() -> argparse.ArgumentParser:
     rate_parser.add_argument("--rating", type=int, required=True, help="Rating from 1 to 10.")
     rate_parser.add_argument("--note", help="Optional short review note.")
 
+    recent_watchlist_parser = subparsers.add_parser("recent-watchlist", help="Show recently added watchlist entries.")
+    recent_watchlist_parser.add_argument("--limit", type=int, default=5, help="Maximum number of entries to show.")
+
     subparsers.add_parser("list-watchlist", help="Show watchlist entries.")
     subparsers.add_parser("list-watched", help="Show watched movies from the watchlist.")
     return parser
@@ -240,6 +243,20 @@ def print_movie_details(movie_id: int) -> None:
     print(f"Runtime: {details.runtime_minutes} minutes")
     print(f"Average Rating: {details.average_rating}")
 
+def print_recent_watchlist_entries(limit: int = 5) -> None:
+    if limit <= 0:
+        raise ValueError("Limit must be greater than 0.")
+
+    entries = repository.get_recent_watchlist_entries(limit=limit)
+    if not entries:
+        print("No watchlist entries found.")
+        return
+
+    print("Recently Added Watchlist Entries:")
+    for entry in entries:
+        status = "Watched" if entry.is_watched else "To Watch"
+        print(f"[{entry.movie_id}] {entry.title} ({entry.release_year}) - {status}")
+
 def prompt_text(prompt: str, *, optional: bool = False) -> str | None:
     while True:
         value = input(prompt).strip()
@@ -308,7 +325,8 @@ def show_menu() -> None:
     print("11. Search by director")
     print("12. Top Rated Movies")
     print("13. Get movie details")
-    print("14. Exit")
+    print("14. Print recently added watchlist entries")
+    print("15. Exit")
 
 
 def run_menu() -> None:
@@ -381,10 +399,13 @@ def run_menu() -> None:
                 movie_id = prompt_int("Movie ID to view details for: ", minimum=1)
                 print_movie_details(movie_id)
             elif choice == "14":
+                limit = prompt_int("How many recent watchlist entries should be shown? ", minimum=1)
+                print_recent_watchlist_entries(limit=limit)
+            elif choice == "15":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 14.")
+                print("Please choose a number from 1 to 15.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -417,9 +438,12 @@ def main() -> None:
         print_top_rated_movies(limit=args.limit, genre=args.genre, director=args.director)
     elif args.command == "update-rating":
         update_movie_rating(movie_id=args.movie_id, rating=args.rating)
+    elif args.command == "recent-watchlist":
+        print_recent_watchlist_entries(limit=args.limit)
     elif args.command == "movie-details":
         print_movie_details(movie_id=args.movie_id)
     else:
         print("Unknown command.")
+  
 if __name__ == "__main__":
     main()
