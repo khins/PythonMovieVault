@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import csv
 from datetime import datetime
+from pathlib import Path
 
 from . import repository
 
@@ -61,6 +63,9 @@ def build_parser() -> argparse.ArgumentParser:
     recent_watchlist_parser = subparsers.add_parser("recent-watchlist", help="Show recently added watchlist entries.")
     recent_watchlist_parser.add_argument("--limit", type=int, default=5, help="Maximum number of entries to show.")
 
+    export_watchlist_parser = subparsers.add_parser("export-watchlist", help="Export the watchlist to a file.")
+    export_watchlist_parser.add_argument("--output", required=True, help="Output file path.")
+
     subparsers.add_parser("list-watchlist", help="Show watchlist entries.")
     subparsers.add_parser("list-watched", help="Show watched movies from the watchlist.")
     return parser
@@ -93,7 +98,6 @@ def print_search_results(
     for movie in movies:
         print(f"[{movie.movie_id}] {movie.title} ({movie.release_year}) - {movie.genre_name}")
 
-
 def print_watchlist() -> None:
     items = repository.list_watchlist()
     if not items:
@@ -103,6 +107,47 @@ def print_watchlist() -> None:
     for item in items:
         status = "Watched" if item.is_watched else "To Watch"
         print(f"[{item.movie_id}] {item.title} ({item.release_year}) - {status}")
+
+def export_watchlist(output_path: str) -> None:
+    output = Path(output_path).expanduser()
+    if not str(output).strip():
+        raise ValueError("Output path cannot be empty.")
+
+    items = repository.list_watchlist()
+    if not items:
+        print("The watchlist is empty. No file will be created.")
+        return
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with output.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow([
+                "watchlist_id",
+                "movie_id",
+                "title",
+                "release_year",
+                "added_on",
+                "is_watched",
+            ])
+
+            for item in items:
+                writer.writerow([
+                    item.watchlist_id,
+                    item.movie_id,
+                    item.title,
+                    item.release_year,
+                    item.added_on,
+                    item.is_watched,
+                ])
+    except PermissionError as error:
+        raise PermissionError(
+            f"Cannot write to '{output}'. Try a location in your user folder such as "
+            f"'C:\\Users\\Kevin\\OneDrive\\sql\\sql-server\\exports\\watchlist.csv'."
+        ) from error
+
+    print(f"Watchlist exported to {output}.")
 
 def print_top_rated_movies(
     limit: int = 10,
@@ -326,7 +371,8 @@ def show_menu() -> None:
     print("12. Top Rated Movies")
     print("13. Get movie details")
     print("14. Print recently added watchlist entries")
-    print("15. Exit")
+    print("15. Export watchlist to CSV")
+    print("16. Exit")
 
 
 def run_menu() -> None:
@@ -402,13 +448,15 @@ def run_menu() -> None:
                 limit = prompt_int("How many recent watchlist entries should be shown? ", minimum=1)
                 print_recent_watchlist_entries(limit=limit)
             elif choice == "15":
+                output_path = prompt_text("Output file path: ")
+                export_watchlist(output_path=output_path)
+            elif choice == "16":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 15.")
+                print("Please choose a number from 1 to 16.")
         except Exception as error:
             print(f"Error: {error}")
-
 
 def main() -> None:
     parser = build_parser()
@@ -440,6 +488,8 @@ def main() -> None:
         update_movie_rating(movie_id=args.movie_id, rating=args.rating)
     elif args.command == "recent-watchlist":
         print_recent_watchlist_entries(limit=args.limit)
+    elif args.command == "export-watchlist":
+        export_watchlist(output_path=args.output)
     elif args.command == "movie-details":
         print_movie_details(movie_id=args.movie_id)
     else:
