@@ -361,3 +361,24 @@ BEGIN
     ORDER BY RatedOn DESC, UserRatingId DESC;
 END;
 GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_GetMovieDetails
+    @MovieId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        m.MovieId,
+        m.Title,
+        m.ReleaseYear,
+        g.GenreName,
+        m.DirectorName,
+        m.RuntimeMinutes,
+        m.AverageRating
+    FROM dbo.Movies AS m
+    INNER JOIN dbo.Genres AS g
+        ON m.GenreId = g.GenreId
+    WHERE m.MovieId = @MovieId;
+END;
+GO

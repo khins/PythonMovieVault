@@ -161,3 +161,22 @@ def list_watchlist(*, watched_only: bool = False) -> list[WatchlistItem]:
         )
         for row in rows
     ]
+
+def get_movie_by_id(movie_id: int) -> Movie | None:
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("EXEC dbo.usp_GetMovieDetails @MovieId = ?;", movie_id)
+        row = cursor.fetchone()
+
+    if row is None:
+        return None
+
+    return Movie(
+        movie_id=row.MovieId,
+        title=row.Title,
+        release_year=row.ReleaseYear,
+        genre_name=row.GenreName,
+        director_name=row.DirectorName,
+        runtime_minutes=row.RuntimeMinutes,
+        average_rating=float(row.AverageRating) if row.AverageRating is not None else None,
+    )

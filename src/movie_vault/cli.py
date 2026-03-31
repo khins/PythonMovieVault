@@ -38,6 +38,9 @@ def build_parser() -> argparse.ArgumentParser:
     update_movie_rating_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
     update_movie_rating_parser.add_argument("--rating", type=int, required=True, help="New rating (1-10).")
 
+    movie_details_parser = subparsers.add_parser("movie-details", help="Show details for a specific movie.")
+    movie_details_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
+
     watchlist_parser = subparsers.add_parser("add-to-watchlist", help="Add a movie to the watchlist.")
     watchlist_parser.add_argument("--movie-id", type=int, required=True, help="Movie ID.")
 
@@ -221,6 +224,21 @@ def update_movie_rating(movie_id: int, rating: int) -> None:
     repository.update_rating(movie_id=movie_id, rating=rating)
     print("Rating updated.")
 
+def print_movie_details(movie_id: int) -> None:
+    if movie_id <= 0:
+        raise ValueError("Movie ID must be greater than 0.")
+
+    details = repository.get_movie_by_id(movie_id)
+    if details is None:
+        print(f"No movie found with ID {movie_id}.")
+        return
+
+    print(f"Title: {details.title}")
+    print(f"Release Year: {details.release_year}")
+    print(f"Genre: {details.genre_name}")
+    print(f"Director: {details.director_name}")
+    print(f"Runtime: {details.runtime_minutes} minutes")
+    print(f"Average Rating: {details.average_rating}")
 
 def prompt_text(prompt: str, *, optional: bool = False) -> str | None:
     while True:
@@ -289,7 +307,8 @@ def show_menu() -> None:
     print("10. Show watched movies only")
     print("11. Search by director")
     print("12. Top Rated Movies")
-    print("13. Exit")
+    print("13. Get movie details")
+    print("14. Exit")
 
 
 def run_menu() -> None:
@@ -359,10 +378,13 @@ def run_menu() -> None:
                 director = prompt_text("Director filter (press Enter to skip): ", optional=True)
                 print_top_rated_movies(limit=limit, genre=genre, director=director)
             elif choice == "13":
+                movie_id = prompt_int("Movie ID to view details for: ", minimum=1)
+                print_movie_details(movie_id)
+            elif choice == "14":
                 print("Goodbye.")
                 break
             else:
-                print("Please choose a number from 1 to 13.")
+                print("Please choose a number from 1 to 14.")
         except Exception as error:
             print(f"Error: {error}")
 
@@ -395,5 +417,9 @@ def main() -> None:
         print_top_rated_movies(limit=args.limit, genre=args.genre, director=args.director)
     elif args.command == "update-rating":
         update_movie_rating(movie_id=args.movie_id, rating=args.rating)
+    elif args.command == "movie-details":
+        print_movie_details(movie_id=args.movie_id)
+    else:
+        print("Unknown command.")
 if __name__ == "__main__":
     main()
